@@ -1,6 +1,22 @@
 # dynamic-navigation-and-immersive-mapping-enhancing-route-optimization-with-AI
 
 This project is a full-featured web-based indoor navigation system built using Mapbox GL JS, allowing users to:
+![Screenshot 2025-04-02 170033](https://github.com/user-attachments/assets/14107a53-2fb8-4ae1-b6bf-61bddb506cc7)
+
+
+![Screenshot 2025-04-02 170115](https://github.com/user-attachments/assets/22010f5a-96d8-4d27-82a5-bce8d05f520d)
+
+
+![Screenshot 2025-04-02 170726](https://github.com/user-attachments/assets/6a7be7e0-9080-4fba-93f1-26c673b0baa8)
+
+
+![Screenshot 2025-04-02 170757](https://github.com/user-attachments/assets/f1fded02-f150-4a25-8976-da691b4e9539)
+
+
+![Screenshot 2025-04-02 171203](https://github.com/user-attachments/assets/a0faacdc-3e0b-42f6-9b7b-d7ffdd10ecc8)
+
+
+![Screenshot 2025-04-02 170947](https://github.com/user-attachments/assets/fb62cdb5-4ec7-40cf-b752-226a610d3194)
 
 - Interact with a beautiful custom-styled map
 
@@ -81,6 +97,9 @@ Mapbox GL JS v2 & v3
 GeoJSON (for routing)
 
 Optional Leaflet Sidebar
+
+output:
+https://syed-basila.github.io/dynamic-navigation-and-immersive-mapping-enhancing-route-optimization-with-AI/
 
 🙌 Acknowledgements
 Thanks to Mapbox for the awesome tools.
