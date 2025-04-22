@@ -2,17 +2,17 @@
 
 This project is a full-featured web-based indoor navigation system built using Mapbox GL JS, allowing users to:
 
-Interact with a beautiful custom-styled map
+- Interact with a beautiful custom-styled map
 
-Use custom waypoints for navigation
+- Use custom waypoints for navigation
 
-Search for locations
+- Search for locations
 
-View directions between selected waypoints
+- View directions between selected waypoints
 
-Toggle 3D map view
+- Toggle 3D map view
 
-Utilize current location
+- Utilize current location
 
 ✨ Features
 ✅ Custom Mapbox style
@@ -45,7 +45,7 @@ A local server (use Live Server extension in VSCode or Python SimpleHTTPServer)
 Setup
 Clone this repository:
 ```
-git clone https://github.com/your-username/mapbox-indoor-wayfinding.git
+git clone [https://github.com/your-username/mapbox-indoor-wayfinding.git](https://github.com/Syed-Basila/dynamic-navigation-and-immersive-mapping-enhancing-route-optimization-with-AI.git)
 ```
 Replace the Mapbox Access Token in index.html:
 ```
