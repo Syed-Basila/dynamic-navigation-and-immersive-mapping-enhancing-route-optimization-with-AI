@@ -1,0 +1,471 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Sidebar and Search</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.0.0/mapbox-gl-directions.js'></script>
+<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.0.0/mapbox-gl-directions.css' type='text/css' />
+
+    <link rel="stylesheet" href="leaflet-sidebar.css"/>
+    <link rel="stylesheet" href="stylem.css"/>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width:100%; height: 100%; }
+        #sidebar { position: absolute; top: 0; right: 0; width: 25%; height: 100%; overflow-y: scroll; background: white; display: none; }
+        .card { padding: 10px; border-bottom: 1px solid #ccc; cursor: pointer; }
+        .custom-marker { background-size: cover; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; }
+        .autocomplete { position: relative; display: inline-block; }
+        .autocomplete-items { position: absolute; border: 1px solid #d4d4d4; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 0; }
+        .autocomplete-items div { padding: 10px; cursor: pointer; background-color: #fff; border-bottom: 1px solid #d4d4d4; }
+        .autocomplete-items div:hover { background-color: #e9e9e9; }
+        .autocomplete-active { background-color: DodgerBlue !important; color: #ffffff; }
+        #searchContainer { position: absolute; top: 10px; left: 10px; z-index: 1; display: flex; flex-direction: column; }
+        #searchIcon { cursor: pointer; padding: 10px; border: 1px solid #ccc; background: white; }
+        #searchResults { margin-top: 10px; }
+        .close-icon { cursor: pointer; float: right; font-size: 20px; }
+        #currentLocationButton { padding: 10px; background: white; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; margin-bottom: 10px; }
+   
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<div id='sidebar'>
+    <div id='cardsContainer'></div>
+</div>
+
+<div id="searchContainer">
+     <div style="display: flex; align-items: center;">
+        <div class="autocomplete">
+            <input id="searchBarf" type="text" placeholder="Search starting location..." style="width: 300px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+        </div>
+        <div id="currentLocationButton" style="margin-left: 10px; cursor: pointer;">Use Current Location</div>
+    </div>
+    
+    <div style="display: flex; align-items: center;">
+        <div id="searchIcon">🔍</div>
+        <div class="autocomplete">
+            <input id="searchBar" type="text" placeholder="Search..." style="width: 300px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+        </div>
+    </div>
+    <div id="searchResults"></div>
+</div>
+<div id="3dButton" style="position: absolute; bottom:10px; right: 10px; z-index: 10; background: #fff; border: 1px solid #ccc; padding: 10px; border-radius: 5px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);font-weight: bold;">
+    3D View
+</div>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic3llZC1iYXNpbGEiLCJhIjoiY2x4cHg3dzM0MGQ2dDJyczRuOHRibnhpcyJ9.WpzsnLAEpVH2tCfTQgYqDQ';
+
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/syed-basila/clxpyopvr00mg01r217tz19xy', // Custom style URL
+        center: [ 78.695717,10.786447],
+        zoom: 12
+    });
+
+    map.addControl(new mapboxgl.NavigationControl());
+    //--------------------------------------------------------------------------------------------------------------------------------------------
+      
+  
+    // Custom GeoJSON for waypoints
+    const customGeojson = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {},
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [78.69581999689808, 10.786551333954094], // Waypoint 1
+                        [78.69540693707683, 10.786567142845854], // Waypoint 2
+                        [78.69483294485639, 10.786577682105715], // Waypoint 3
+                        [78.69479539396394, 10.786040179354814], // Waypoint 4
+                        [78.69512262317312, 10.785998022236456], // Waypoint 5
+                        [78.69584681896441, 10.785982213314796], // Waypoint 6
+                        [78.6958950986841, 10.786535525061538]   // Waypoint 7 (End)
+                    ]
+                }
+            }
+        ]
+    };
+
+    let waypoints = [];  // Array to store clicked points
+
+    // Function to fetch and add waypoints from a GeoJSON file
+    function loadGeoJSONWaypoints() {
+        fetch('path/to/your/map.geojson') // Update with the path to your GeoJSON file
+            .then(response => response.json())
+            .then(data => {
+                addMarkersFromGeoJSON(data);
+            })
+            .catch(error => console.error('Error loading GeoJSON:', error));
+    }
+
+    // Function to add markers from GeoJSON data
+    function addMarkersFromGeoJSON(data) {
+        data.features.forEach((feature, index) => {
+            const coordinates = feature.geometry.coordinates;
+            const name = feature.properties.name || `Waypoint ${index + 1}`;
+
+            const marker = new mapboxgl.Marker()
+                .setLngLat(coordinates)
+                .setPopup(new mapboxgl.Popup().setText(name))
+                .addTo(map)
+                .getElement().addEventListener('click', function () {
+                    onMarkerClick(index);
+                });
+        });
+    }
+
+    // Function to add markers for all waypoints
+    function addMarkersForWaypoints() {
+        const coordinates = customGeojson.features[0].geometry.coordinates;
+
+        coordinates.forEach((coord, index) => {
+            const marker = new mapboxgl.Marker()
+                .setLngLat([coord[0], coord[1]])
+                .setPopup(new mapboxgl.Popup().setText(`Waypoint ${index + 1}`))
+                .addTo(map)
+                .getElement().addEventListener('click', function () {
+                    onMarkerClick(index);
+                });
+        });
+    }
+
+    // Marker click handler
+    function onMarkerClick(index) {
+        // Add the clicked waypoint to the waypoints array
+        waypoints.push(index);
+
+        // Store the marker index for route generation
+        if (waypoints.length === 2) {
+            generateShortestRoute(waypoints[0], waypoints[1]);
+            waypoints = [];  // Reset waypoints after generating the route
+        }
+    }
+
+    // Function to generate the shortest route between two points
+    function generateShortestRoute(startIndex, endIndex) {
+        const coordinates = customGeojson.features[0].geometry.coordinates;
+
+        let shortestPathCoords;
+
+        // Determine the shortest path based on waypoint indices
+        if (startIndex < endIndex) {
+            shortestPathCoords = coordinates.slice(startIndex, endIndex + 1);
+        } else {
+            shortestPathCoords = coordinates.slice(endIndex, startIndex + 1).reverse();
+        }
+
+        // Draw the shortest route as a new LineString
+        const shortestPathGeojson = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {},
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": shortestPathCoords
+                    }
+                }
+            ]
+        };
+
+        // Clear previous layers before drawing the new route
+        if (map.getSource('shortest-route')) {
+            map.removeLayer('shortest-route');
+            map.removeSource('shortest-route');
+        }
+
+        // Draw the shortest path on the map
+        map.addSource('shortest-route', {
+            'type': 'geojson',
+            'data': shortestPathGeojson
+        });
+
+        map.addLayer({
+            'id': 'shortest-route',
+            'type': 'line',
+            'source': 'shortest-route',
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            'paint': {
+                'line-color': 'green',
+                'line-width': 4
+            }
+        });
+
+        alert("Shortest route generated between the selected waypoints.");
+    }
+
+    // Call the functions to load waypoints and add markers on load
+    loadGeoJSONWaypoints();
+    addMarkersForWaypoints();
+    //-----------------------------------------------------------------------------------------------------------------------------------------------
+
+    function addMarkers(data) {
+        const markers = [];
+        const locations = [];
+
+        data.forEach((row, index) => {
+            const coords = row[0].split(',').map(Number);
+            const name = row[1];
+            const image = row[2];
+            const address = row[3];
+            const link = row[4];
+            const phone = row[5];
+
+            locations.push({ coords, name, image, address, link, phone, index });
+
+            const markerElement = document.createElement('div');
+            markerElement.className = 'custom-marker';
+            markerElement.style.backgroundImage = `url(${image})`;
+
+            const popupContent = `
+                <div class="popup">
+                    <h3>${name}</h3>
+                    <img src="${image}" alt="${name}" style="width: 100%; height: auto;" />
+                    <p><b>Location:</b> ${address}</p>
+                    <p><b>Floor:</b> ${phone}</p>  
+                    <a>${link}</a>
+                </div>
+            `;
+
+            const marker = new mapboxgl.Marker(markerElement)
+                .setLngLat(coords)
+                .setPopup(new mapboxgl.Popup().setHTML(popupContent))
+                .addTo(map);
+
+            markers.push(marker);
+
+            const cardElement = document.createElement('div');
+            cardElement.className = 'card';
+            cardElement.innerHTML = `
+                <div class="card__image">
+                    <img src="${image}" alt="${name}" />
+                </div>
+                <div class="card__info">
+                    <div class="car__info--title">
+                        <p>${name}</p>
+                    </div>
+                </div>
+            `;
+
+            cardElement.addEventListener('click', () => {
+                map.flyTo({ center: coords, zoom: 18 });
+                marker.togglePopup();
+            });
+
+            document.getElementById('cardsContainer').appendChild(cardElement);
+        });
+
+        autocomplete(document.getElementById('searchBar'), locations);
+        autocomplete(document.getElementById('searchBarf'), locations);
+    }
+
+    function autocomplete(inp, arr) {
+        let currentFocus;
+        inp.addEventListener('input', function(e) {
+            let a, b, i, val = this.value;
+            closeAllLists();
+            if (!val) { return false; }
+            currentFocus = -1;
+            a = document.createElement('DIV');
+            a.setAttribute('id', this.id + 'autocomplete-list');
+            a.setAttribute('class', 'autocomplete-items');
+            this.parentNode.appendChild(a);
+            for (i = 0; i < arr.length; i++) {
+                if (arr[i].name.substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+                    b = document.createElement('DIV');
+                    b.innerHTML = '<strong>' + arr[i].name.substr(0, val.length) + '</strong>';
+                    b.innerHTML += arr[i].name.substr(val.length);
+                    b.innerHTML += "<input type='hidden' value='" + arr[i].name + "' data-coords='" + arr[i].coords + "' data-index='" + arr[i].index + "' data-image='" + arr[i].image + "' data-address='" + arr[i].address + "' data-link='" + arr[i].link + "' data-phone='" + arr[i].phone + "'>";
+                    b.addEventListener('click', function(e) {
+                        inp.value = this.getElementsByTagName('input')[0].value;
+                        const coords = this.getElementsByTagName('input')[0].getAttribute('data-coords').split(',').map(Number);
+                        const index = this.getElementsByTagName('input')[0].getAttribute('data-index');
+                        const image = this.getElementsByTagName('input')[0].getAttribute('data-image');
+                        const address = this.getElementsByTagName('input')[0].getAttribute('data-address');
+                        const link = this.getElementsByTagName('input')[0].getAttribute('data-link');
+                        const phone = this.getElementsByTagName('input')[0].getAttribute('data-phone');
+                        showSearchedCard(index, coords, image, address, link, phone);
+                        closeAllLists();
+                    });
+                    a.appendChild(b);
+                }
+            }
+        });
+
+        inp.addEventListener('keydown', function(e) {
+            let x = document.getElementById(this.id + 'autocomplete-list');
+            if (x) x = x.getElementsByTagName('div');
+            if (e.keyCode == 40) {
+                currentFocus++;
+                addActive(x);
+            } else if (e.keyCode == 38) {
+                currentFocus--;
+                addActive(x);
+            } else if (e.keyCode == 13) {
+                e.preventDefault();
+                if (currentFocus > -1) {
+                    if (x) x[currentFocus].click();
+                }
+            }
+        });
+
+        function addActive(x) {
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            x[currentFocus].classList.add('autocomplete-active');
+        }
+
+        function removeActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove('autocomplete-active');
+            }
+        }
+
+        function closeAllLists(elmnt) {
+            const x = document.getElementsByClassName('autocomplete-items');
+            for (let i = 0; i < x.length; i++) {
+                if (elmnt != x[i] && elmnt != inp) {
+                    x[i].parentNode.removeChild(x[i]);
+                }
+            }
+        }
+
+        document.addEventListener('click', function (e) {
+            closeAllLists(e.target);
+        });
+    }
+
+   function showSearchedCard(index, coords, image, address, link, phone) {
+    const searchResults = document.getElementById('searchResults');
+    searchResults.innerHTML = '';  // Clear previous search results
+    const cardElement = document.createElement('div');
+    cardElement.className = 'card';
+    cardElement.innerHTML = `
+        <div class="close-icon">&times;</div>
+        <div class="card__image">
+            <img src="${image}" alt="${name}" />
+        </div>
+        <div class="card__info">
+            <div class="car__info--title">
+                <p>${name}</p>
+            </div>
+            <p><b>Address:</b> ${address}</p>
+            <p><b>Phone:</b> ${phone}</p>
+            <a href="${link}" target="_blank">Visit Us</a>
+        </div>
+    `;
+
+    // Close the card when the close icon is clicked
+    cardElement.querySelector('.close-icon').addEventListener('click', () => {
+        searchResults.innerHTML = '';  // Clear the card
+    });
+
+    // Handle card click
+    cardElement.addEventListener('click', () => {
+        // Close the card first
+        searchResults.innerHTML = '';
+
+        // Show location on map
+        map.flyTo({ center: coords, zoom: 18 });
+
+        // Find and click the marker
+        const markerElements = document.querySelectorAll('.mapboxgl-marker');
+        if (markerElements[index]) {
+            markerElements[index].click();
+        }
+    });
+
+    searchResults.appendChild(cardElement);
+}
+
+
+    const sheetID = '1zkxjCUv4EhFl34AuN8HhNE3DazbinGkKrR17OPBlunU';
+    const sheetRange = 'mapdata!A2:F30';
+    const apiKey = 'AIzaSyAJBec7_E9UNpNbGnFjrcCr4oS8gdVgtck';
+    const sheetURL = `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/${sheetRange}?key=${apiKey}`;
+
+    fetch(sheetURL)
+        .then(response => response.json())
+        .then(data => {
+            const rows = data.values.slice(1); // Remove header row
+            addMarkers(rows);
+        })
+        .catch(error => console.error('Error fetching data:', error));
+document.getElementById('3dButton').addEventListener('click', () => {
+    const is3D = map.getPitch() > 0;
+    if (is3D) {
+        // Switch to 2D view
+        map.easeTo({
+            pitch: 0
+        });
+        document.getElementById('3dButton').innerText = '3D View';
+    } else {
+        // Switch to 3D view
+        map.easeTo({
+            pitch: 90
+        });
+        document.getElementById('3dButton').innerText = '2D View';
+    }
+});
+
+    document.getElementById('currentLocationButton').addEventListener('click', () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const { latitude, longitude } = position.coords;
+                map.flyTo({
+                    center: [longitude, latitude],
+                    zoom: 15
+                });
+
+                new mapboxgl.Marker()
+                    .setLngLat([longitude, latitude])
+                    .addTo(map);
+            }, error => {
+                console.error('Error getting location', error);
+                alert('Error getting location');
+            });
+        } else {
+            alert('Geolocation is not supported by this browser.');
+        }
+    });
+    map.on('load', function() {
+   map.addSource('route', {
+      'type': 'geojson',
+      'data': 'map.geojson'
+   });
+
+   map.addLayer({
+      'id': 'route-layer',
+      'type': 'line',
+      'source': 'route',
+      'layout': {
+         'line-join': 'round',
+         'line-cap': 'round'
+      },
+      'paint': {
+         'line-color': '#FF5733',
+         'line-width': 4
+      }
+   });
+});
+
+</script>
+
+</body>
+</html>

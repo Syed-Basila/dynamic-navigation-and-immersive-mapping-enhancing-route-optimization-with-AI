@@ -1,0 +1,144 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap");
+
+body {
+  font-family: "Montserrat", sans-serif;
+}
+.leaflet-popup-content-wrapper {
+    width: 350px;
+    background:white;
+    color:grey;
+}
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+}
+
+.art-board {
+  border-radius: 40px;
+  border: 6px solid white;
+  box-shadow: -30px 70px 150px -20px rgba(51, 51, 51, 0.25);
+}
+
+.art-board__container {
+  margin: 18px 0 18px 0;
+  width: 375px;
+  height: 812px;
+  overflow: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.card {
+  width: 295px;
+  overflow: hidden;
+  border-radius: 25px;
+  border: 1px solid white;
+  margin: 10px;
+  background-color:white;
+  box-shadow: 5px 5px 15px 5px rgba(230, 230, 250, 1);
+}
+.card__image {
+  position: relative;
+  height: 160px;
+}
+
+.card__image > img {
+  max-width: auto;
+  height: 150px;
+  width: 100%;
+}
+
+.card__info {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0px 30px 20px 30px;
+}
+.card__info h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+.card__info p {
+  font-size: 14px;
+  font-weight: 600;
+}
+.card__info--price {
+  text-align: right;
+  color: orangered;
+}
+.rect2 {
+  position: relative;
+  bottom: 315px;
+  right: 15px;
+  width: 325px;
+  height: 230px;
+  border: 1px solid white;
+  border-radius: 0 0px 80px 0;
+  background-image: url();
+  transform: rotate(10deg);
+  object-fit: cover;
+}
+.checked {
+  color: #ffd700;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cccccc;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+}
+
+#map {
+  height: 600px;
+  width: 100%;
+}
+
+.leaflet-marker-icon leaflet-zoom-animated leaflet-interactive{
+  color: #68241C;
+} 
+
+ .leaflet-popup-tip-container {
+  width: 40px;
+  height: 11px;
+  position: absolute;
+  left: 50%;
+  margin-left: -7px;
+  
+  overflow: hidden;
+  pointer-events: none;
+} 
+.search-icon {
+    margin-left: 5px;
+    cursor: pointer;
+}
+.suggestions {
+    background-color: white;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    display: none; /* Hide by default */
+    position: absolute;
+    width: 100%;
+}
+.suggestions div {
+    padding: 5px;
+    cursor: pointer;
+}
+.suggestions div:hover {
+    background-color: #f0f0f0;
+}
+
+/*https://docs.google.com/spreadsheets/d/e/2PACX-1vTm5v47OCV9XqXoysBSrRXHl74wLuQyDHO3s7gfYT9bkegNEoB9q6psyfV39KeJVRv0h738WM9CdGSD/pubhtml
+https://docs.google.com/spreadsheets/d/1PhVePG_hSOgdlBZBpO0bNwXG5vQ12fo2h4SpyRXvdkw/edit?gid=1848024179#gid=1848024179*/
